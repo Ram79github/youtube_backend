@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
+import dns from "dns";
 const app = express();
 
 dotenv.config(
@@ -9,7 +10,8 @@ dotenv.config(
         path: "./.env"
     }
 );
-
+// dns changes to avoid dns lookup issues in some environments
+dns.setServers(["1.1.1.1","8.8.8.8"]);
 //common middlewares
 app.use(cors({
     origin: process.env.CORS_ORIGIN,

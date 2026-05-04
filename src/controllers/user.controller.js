@@ -3,6 +3,8 @@ import {ApiError} from '../utils/apiError.js'
 import {User} from '../models/user.models.js'
 import {fileUploadOnCloudinary} from '../utils/cloudinary.js'
 import { ApiResponse } from '../utils/apiResponse.js';
+import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
 
 const registerUser = asyncHandler(async (req, res) => {
   // get user details from frontend
@@ -16,40 +18,32 @@ const registerUser = asyncHandler(async (req, res) => {
   // return res
 
 
-  const { username,fullName, email, password} = req.body;
+  const { username, fullName, email, password } = req.body;
 
-if(fullName.trim() === ""){
-  //this apierror util handle error
-   throw new ApiError(400,"fullname is required")
-}if(username.trim() === ""){
-  throw new ApiError(400,"username is required")
-}if(email.trim() === ""){
-  throw new ApiError(400,"email is required")
-}if(password.trim() === ""){
-  throw new ApiError(400,"password is required")
+if([username,fullName,email,password].some(field => !field.trim()==="")){
+
+  throw new ApiError(400,"all fields are required and should not be empty")
 }
-else{
-  return console.error("some thing went wrong");
-  
-}
-const existingUser = User.findOne({
+
+const existingUser = await User.findOne({
   $or:[
     {email},
     {username}  ],
 })
-console.log(existingUser)
+
 if(existingUser){
   throw new ApiError(409,"user already exists with this email or username");
 }
+
 const avatarLocalPath = req.files?.avatar[0]?.path;
-const coverImageLocaPath = req.files?.coverImage[0]?.path;
+const coverImageLocalPath = req.files?.coverImage[0]?.path;
 
 if(!avatarLocalPath){
   throw new ApiError(400 ,"avatar file is required");
 }
 
 const avatar = await fileUploadOnCloudinary(avatarLocalPath);
-const coverImage = await fileUploadOnCloudinary(coverImageLocaPath);
+const coverImage = await fileUploadOnCloudinary(coverImageLocalPath);
 if(!avatar){
   throw new ApiError(400 ,"avatar file is required")
 }
@@ -60,19 +54,23 @@ const user = await User.create({
   coverImage:coverImage?.url || "",
   email,
   password,
-  username:username.toLowercase
+  username:username.toLowerCase()
 })
+
 // validation check point for user
 // removing passowrd and refreshToken
-const createdUser = await User.findById(user._id).select("-password -refreshToken");
+const createdUser = await User.findById(user._id).select(
+  "-password -refreshToken"
+);
+
 if (!createdUser) {
-  throw new ApiError(500, "somthinf went from wrong")
+  throw new ApiError(500, "something went wrong")
 }
+
+
 return res.status(201).json(
-  new ApiResponse(200,createdUser,"User register successfully")
+  new ApiResponse(201,createdUser,"User register successfully")
 )
-
-
 });
 
 

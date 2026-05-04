@@ -24,7 +24,6 @@ const userSchema= new Schema({
     password:{
         type:String,
         required:true,
-        unique:[true,"Email already exists"],
     },
     avatar:{
         type:String, // by cloudinary url
