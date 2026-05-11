@@ -3,7 +3,13 @@ import { registerUser ,logInUser,logOutUser} from "../controllers/user.controlle
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWt } from "../middlewares/auth.middleware.js";
 
+
 const router = Router();
+router.get("/dashboard",(req,res) => {
+    res.render("userDashboard.ejs", { user: req.user || null });
+});
+
+//route for registration
 
 router.route("/register").post(
     //this is a middleware that do file uploading 
@@ -17,7 +23,8 @@ router.route("/register").post(
             maxCount:1
         }
     ]),
-    registerUser
+    registerUser,
+
 );
 router.route("/login").post(logInUser)
 //secure route
